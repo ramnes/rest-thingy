@@ -1,4 +1,5 @@
 import functools
+import fnmatch
 import os.path
 
 import requests
@@ -26,8 +27,20 @@ def parse_response(method):
 class Thingy(NamesMixin, BaseThingy):
     _base_url = None
     _extractor = extract
+    _inferences = None
     _pluralizer = pluralize
     _resource_name = None
+
+    def __init__(self, *args, **kwargs):
+        super(Thingy, self).__init__(*args, **kwargs)
+        if self._inferences:
+            self._infer()
+
+    def _infer(self):
+        for i in self._inferences:
+            for k in self.__dict__:
+                if fnmatch.fnmatch(k, i):
+                    self.__dict__[k] = self._inferences[i](self.__dict__[k])
 
     @classmethod
     def bind(cls, document):
