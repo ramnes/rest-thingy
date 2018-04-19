@@ -11,6 +11,14 @@ def pluralize(url):
     return url + "s"
 
 
+def deserialize(thingy):
+    inferences = thingy._inferences
+    for pattern, inference in inferences.items():
+        for key, value in thingy.__dict__.items():
+            if fnmatch.fnmatch(key, pattern):
+                thingy.__dict__[key] = inference(value)
+
+
 def extract(response):
     return response.json()
 
@@ -26,21 +34,16 @@ def parse_response(method):
 
 class Thingy(NamesMixin, BaseThingy):
     _base_url = None
-    _extractor = extract
-    _inferences = None
-    _pluralizer = pluralize
     _resource_name = None
+
+    _extractor = extract
+    _pluralizer = pluralize
+    _deserializer = deserialize
 
     def __init__(self, *args, **kwargs):
         super(Thingy, self).__init__(*args, **kwargs)
-        if self._inferences:
-            self._infer()
-
-    def _infer(self):
-        for i in self._inferences:
-            for k in self.__dict__:
-                if fnmatch.fnmatch(k, i):
-                    self.__dict__[k] = self._inferences[i](self.__dict__[k])
+        if self._deserializer:
+            self._deserializer()
 
     @classmethod
     def bind(cls, document):
