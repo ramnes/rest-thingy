@@ -28,7 +28,7 @@ class Thingy(NamesMixin, BaseThingy):
         if isinstance(response, dict):
             return cls(response)
         if isinstance(response, list):
-            return [cls.bind(cls, o) for o in response]
+            return [cls.bind(o) for o in response]
 
     @classmethod
     def deserialize(cls, response):
