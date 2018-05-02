@@ -24,11 +24,11 @@ class Thingy(NamesMixin, BaseThingy):
     _resource_name = None
 
     @classmethod
-    def bind(cls, document):
-        if isinstance(document, dict):
-            return cls(document)
-        if isinstance(document, list):
-            return [cls.bind(cls, o) for o in document]
+    def bind(cls, response):
+        if isinstance(response, dict):
+            return cls(response)
+        if isinstance(response, list):
+            return [cls.bind(cls, o) for o in response]
 
     @classmethod
     def deserialize(cls, response):
