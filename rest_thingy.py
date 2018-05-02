@@ -29,6 +29,7 @@ class Thingy(NamesMixin, BaseThingy):
             return cls(response)
         if isinstance(response, list):
             return [cls.bind(o) for o in response]
+        raise TypeError("Can't bind a '{}'.".format(type(response)))
 
     @classmethod
     def deserialize(cls, response):
