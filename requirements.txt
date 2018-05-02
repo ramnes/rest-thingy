@@ -1,3 +1,5 @@
-requests
 Thingy
+requests
+marshmallow
 
+pytest
