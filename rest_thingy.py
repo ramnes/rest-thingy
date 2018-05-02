@@ -7,43 +7,21 @@ from thingy import Thingy as BaseThingy
 from thingy import NamesMixin, classproperty
 
 
-def pluralize(url):
-    return url + "s"
-
-
-def deserialize(thingy):
-    inferences = thingy._inferences
-    for pattern, inference in inferences.items():
-        for key, value in thingy.__dict__.items():
-            if fnmatch.fnmatch(key, pattern):
-                thingy.__dict__[key] = inference(value)
-
-
-def extract(response):
-    return response.json()
-
-
 def parse_response(method):
     @functools.wraps(method)
     def wrapper(cls, *args, **kwargs):
         response = method(cls, *args, **kwargs)
-        response = cls._extractor(response)
+        response = cls.extract(response)
+        if cls.deserialize:
+            response = cls.deserialize(response)
         return cls.bind(response)
     return wrapper
 
 
 class Thingy(NamesMixin, BaseThingy):
     _base_url = None
+    _inferences = {}
     _resource_name = None
-
-    _extractor = extract
-    _pluralizer = pluralize
-    _deserializer = deserialize
-
-    def __init__(self, *args, **kwargs):
-        super(Thingy, self).__init__(*args, **kwargs)
-        if self._deserializer:
-            self._deserializer()
 
     @classmethod
     def bind(cls, document):
@@ -53,8 +31,25 @@ class Thingy(NamesMixin, BaseThingy):
             return [cls.bind(cls, o) for o in document]
 
     @classmethod
+    def deserialize(cls, response):
+        if cls._inferences:
+            for pattern, inference in cls._inferences.items():
+                for key, value in response.items():
+                    if fnmatch.fnmatch(key, pattern):
+                        response[key] = inference(value)
+        return response
+
+    @classmethod
+    def extract(cls, response):
+        return response.json()
+
+    @classmethod
     def get_resource_name(cls):
         return "-".join(cls.names)
+
+    @classmethod
+    def pluralize(cls, url):
+        return url + "s"
 
     @classproperty
     def base_url(cls):
@@ -68,7 +63,7 @@ class Thingy(NamesMixin, BaseThingy):
 
     @classproperty
     def plural_resource_name(cls):
-        return cls._pluralizer(cls.resource_name)
+        return cls.pluralize(cls.resource_name)
 
     @classproperty
     def url(cls):
