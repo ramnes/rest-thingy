@@ -99,4 +99,16 @@ class Thingy(NamesMixin, BaseThingy):
         pass
 
 
-__all__ = ["Thingy"]
+class MarshmallowMixin():
+    _schema = None
+
+    @classmethod
+    def deserialize(cls, response):
+        data, errors = cls._schema.load(response)
+        if errors:
+            raise TypeError(errors)
+        response.update(data)
+        return response
+
+
+__all__ = ["MarshmallowMixin", "Thingy"]
